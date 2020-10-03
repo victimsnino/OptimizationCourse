@@ -6,6 +6,9 @@ class Solver:
         self.__model.objective.set_sense(self.__model.objective.sense.maximize)
         
     def add_variable(self, name, obj=1):
+        if (name in self.__model.variables.get_names()):
+            return
+
         self.__model.variables.add(obj=[obj],
                                  lb=[0], ub=[1],
                                  types=[self.__model.variables.type.binary],
@@ -36,3 +39,7 @@ class Solver:
 
         names = self.__model.variables.get_names()
         values = self.__model.solution.get_values()
+        
+        clique_points = [names[index] for index, val in enumerate(values) if val == 1]
+        print(f"Clique points: {clique_points}")
+        return values, clique_points
