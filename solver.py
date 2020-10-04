@@ -11,7 +11,7 @@ class Solver:
 
         self.__model.variables.add(obj=[obj],
                                  lb=[0], ub=[1],
-                                 types=[self.__model.variables.type.binary],
+                                 types=[self.__model.variables.type.integer],
                                  names=[name])
 
     def add_constraint(self, indexes_or_variables, sense, value, multiples_for_indexes=None):
@@ -22,7 +22,9 @@ class Solver:
 
         if multiples_for_indexes is None:
             multiples_for_indexes = [1]*len(indexes_or_variables)
-            
+        
+        to_print = [str(m)+'*'+str(i) for i, m in zip(indexes_or_variables, multiples_for_indexes)]
+        #print(f'{to_print} {sense} {value}')    
         target_sense = senses[valid_operations.index(sense)]
 
         self.__model.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=indexes_or_variables,
@@ -31,6 +33,7 @@ class Solver:
                                             rhs=[value])
 
     def solve(self):
+        self.__model.set_results_stream(None)
         self.__model.solve()
 
         status = self.__model.solution.get_status()
@@ -41,5 +44,5 @@ class Solver:
         values = self.__model.solution.get_values()
         
         clique_points = [names[index] for index, val in enumerate(values) if val == 1]
-        print(f"Clique points: {clique_points}")
+        # print(f"Clique points: {clique_points}")
         return values, clique_points

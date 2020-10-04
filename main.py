@@ -1,43 +1,28 @@
-from solver import Solver
-import networkx as nx
-import matplotlib.pyplot as plt 
-import numpy as np
+from common import *
+import argparse
+import os
+import ntpath
 
-class SolveAndVizualize:
-    def __init__(self):
-        self.__solver = Solver()
-        self.__G = nx.Graph()
+def list_of_input_and_answers_in_folder(folder):
+    result = []
+    for filename in os.listdir(folder):
+        if not filename.endswith('.clq'):
+            continue
 
-    def add_edge(self, x, y):
-        self.__G.add_edge(x, y)
-
-    def __add_constrains_to_graph(self):
-        nodes = np.array(self.__G.nodes)
-        for i, node in enumerate(nodes):
-            for another_node in nodes[i+1:]:
-                if self.__G.has_edge(node, another_node) == False:
-                    self.__solver.add_constraint([str(node), str(another_node)], '<=', 1)
-
-    def solve(self):
-        for node in self.__G.nodes:
-            self.__solver.add_variable(str(node))
+        basename = filename.split('.clq')[0]
+        answer_file = folder+'\\'+basename+'.txt'
+        if not os.path.isfile(answer_file):
+            continue
         
-        self.__add_constrains_to_graph()
-        values, clique_points = self.__solver.solve()
+        result.append([folder+'\\'+filename, answer_file])
+    return result
 
-        plt.figure(figsize=(8,8))
-        nx.draw(self.__G, with_labels=True, node_color=values, connectionstyle='arc3, rad = 0.1')
-        plt.show()
-        return clique_points
+ 
+parser = argparse.ArgumentParser()
+parser.add_argument('--folder', required=True, type=str,
+                    help='Path to folder with examples of cliques')
+args = parser.parse_args()
 
-
-t = SolveAndVizualize()
-t.add_edge(1, 2)
-t.add_edge(1, 3)
-t.add_edge(2, 3)
-
-t.add_edge(4, 1)
-t.add_edge(5, 2)
-t.add_edge(6, 3)
-
-t.solve()
+files = list_of_input_and_answers_in_folder(args.folder)
+for input, answer in files:
+    check_model_for(input, answer)
