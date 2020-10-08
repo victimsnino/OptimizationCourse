@@ -4,15 +4,21 @@ class Solver:
     def __init__(self):
         self.__model = cplex.Cplex()
         self.__model.objective.set_sense(self.__model.objective.sense.maximize)
-        
-    def add_variable(self, name, obj=1):
-        if (name in self.__model.variables.get_names()):
-            return
+    
+    def fill_from_matrix(self, matrix):
+        size = matrix.shape[0]
+        self.add_variables(size)
 
-        self.__model.variables.add(obj=[obj],
-                                 lb=[0], ub=[1],
-                                 types=[self.__model.variables.type.integer],
-                                 names=[name])
+        for i in range(size):
+            for j in range(i+1,size):
+                if matrix[i,j] == 0:
+                    self.add_constraint([i,j], '<=', 1)
+
+    def add_variables(self, count):
+        self.__model.variables.add(obj=[1]*count,
+                                   lb=[0]*count, 
+                                   ub=[1]*count,
+                                   types=[self.__model.variables.type.integer]*count)
 
     def add_constraint(self, indexes_or_variables, sense, value, multiples_for_indexes=None):
         valid_operations = ["<=", ">=", "=="]
@@ -22,11 +28,8 @@ class Solver:
 
         if multiples_for_indexes is None:
             multiples_for_indexes = [1]*len(indexes_or_variables)
-        
-        to_print = [str(m)+'*'+str(i) for i, m in zip(indexes_or_variables, multiples_for_indexes)]
-        #print(f'{to_print} {sense} {value}')    
+         
         target_sense = senses[valid_operations.index(sense)]
-
         self.__model.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=indexes_or_variables,
                                                                        val=multiples_for_indexes)],
                                             senses=target_sense,
@@ -36,13 +39,7 @@ class Solver:
         self.__model.set_results_stream(None)
         self.__model.solve()
 
-        status = self.__model.solution.get_status()
-        text_stats = self.__model.solution.status[status]
-        print(f"Solution status = {status} : {text_stats}")
-
-        names = self.__model.variables.get_names()
         values = self.__model.solution.get_values()
         
-        clique_points = [names[index] for index, val in enumerate(values) if val == 1]
-        # print(f"Clique points: {clique_points}")
-        return values, clique_points
+        clique_points = [index for index, val in enumerate(values) if val == 1]
+        return clique_points
