@@ -4,15 +4,15 @@ class Solver:
     def __init__(self):
         self.__model = cplex.Cplex()
         self.__model.objective.set_sense(self.__model.objective.sense.maximize)
-    
+
     def fill_from_matrix(self, matrix):
         size = matrix.shape[0]
         self.add_variables(size)
 
         for i in range(size):
-            for j in range(i+1,size):
-                if matrix[i,j] == 0:
-                    self.add_constraint([i,j], '<=', 1)
+            for j in range(size):
+                if matrix[i, j] == 0 and i != j:
+                    self.add_constraint([i, j], '<=', 1)
 
     def add_variables(self, count):
         self.__model.variables.add(obj=[1]*count,
