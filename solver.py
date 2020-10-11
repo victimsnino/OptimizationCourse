@@ -44,7 +44,6 @@ class Solver:
             if self.__independent_set:
                 self.add_constraint(maximal_independent_set(matrix, i), '<=', 1)
 
-
     def add_variables(self, count):
         self.__model.variables.add(obj=[1]*count,
                                    lb=[0]*count, 

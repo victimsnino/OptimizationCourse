@@ -4,6 +4,17 @@ from common import *
 from solver import Solver
 import numpy as np
 import time
+from utils import *
+
+def test_eps():
+    assert is_equal_with_eps(0.1, 0.1)
+    assert is_equal_with_eps(0.00000000000001, 0)
+    assert is_equal_with_eps(-0.00000000000001, 0)
+    assert is_equal_with_eps(1.00000000000001, 1)
+    assert is_equal_with_eps(0.99999999999999, 1)
+    assert is_equal_with_eps(0.9999, 0.9999)
+    assert is_equal_with_eps(1.111111, 1.111111)
+    assert is_equal_with_eps(1.000000000000001, 1)
 
 def test_simple_clique():
     solver = Solver()
