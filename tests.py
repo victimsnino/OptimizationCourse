@@ -1,8 +1,9 @@
 import pytest
 import os
-from common import check_model_for
+from common import *
 from solver import Solver
 import numpy as np
+import time
 
 def test_simple_clique():
     solver = Solver()
@@ -17,7 +18,20 @@ def test_simple_clique():
     assert solver.solve() == [0, 1, 2, 6]
 
 
-@pytest.mark.parametrize("file_name", ["brock200_2"]) #"C125.9", "keller4", "brock200_2", "p_hat300-1"])
+@pytest.mark.parametrize("file_name", ["C125.9", "keller4", "brock200_2", "p_hat300-1"])
 def test_for_real_data(file_name):
     full_name = os.path.abspath('.')+'\\samples\\'+file_name
-    assert check_model_for(full_name+'.clq', full_name+'.txt', True) == True
+    start = time.time()
+    assert check_cplex_int_model_with_answers(full_name+'.clq', full_name+'.txt', False) == True
+    end = time.time()
+    print(f"Elapsed time: {end-start}")
+
+@pytest.mark.parametrize("file_name", ["C125.9", "keller4", "brock200_2", "p_hat300-1"])
+def test_bnb(file_name):
+    full_name = os.path.abspath('.')+'\\samples\\'+file_name
+    start = time.time()
+
+    check_model_with_custom_bnb(full_name+'.clq', full_name+'.txt')
+   
+    end = time.time()
+    print(f"Elapsed time: {end-start}")

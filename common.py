@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.fromnumeric import var
 from solver import Solver
 
 def parse_input(file_path):
@@ -38,7 +39,7 @@ def is_clique(indexes_set, matrix):
                 return False
     return True
 
-def check_model_for(input_path, answers_path, solve_while_found_solution = True):
+def check_cplex_int_model_with_answers(input_path, answers_path, solve_while_found_solution = True):
     input_matrix = parse_input(input_path)
     answers = to_set_of_indexes(parse_answers(answers_path))
 
@@ -62,5 +63,11 @@ def check_model_for(input_path, answers_path, solve_while_found_solution = True)
         for node_to_ban in clique_points.difference(answers):
             solver.add_constraint([node_to_ban], '==', 0)
 
-def is_equal_with_eps(var1, var2):
-    return
+def check_model_with_custom_bnb(input_path, answers_path):
+    input_matrix = parse_input(input_path)
+    correct_clique_size = len(parse_answers(answers_path))
+
+    solver = Solver(binary=False)
+    solver.fill_from_matrix(input_matrix)
+    clique_points = solver.solve()
+    print(len(clique_points))
