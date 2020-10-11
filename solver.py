@@ -1,5 +1,4 @@
 import cplex
-import itertools
 
 from numpy.matrixlib.defmatrix import matrix
 from utils import *
@@ -9,13 +8,13 @@ import random
 # it search's only in rest part of matrix
 # (not 0..n, 0..n, but in node...n, node...n matrix)
 def maximal_independent_set(matrix, input_node):
-    size = matrix.shape[0]
+    available_nodes = range(input_node,matrix.shape[0])
     node = input_node
-    find_neighbours = lambda x: set([j for j in range(input_node, size) if matrix[x, j] == 1])
+    find_neighbours = lambda x: set([j for j in available_nodes if matrix[x, j] == 1])
     neighbors = find_neighbours(node)
  
     indep_nodes = [node]
-    not_neighbours = set(range(input_node,size)).difference(neighbors.union(indep_nodes))
+    not_neighbours = set(available_nodes).difference(neighbors.union(indep_nodes))
  
     while not_neighbours:
         node = random.choice(list(not_neighbours))
@@ -38,7 +37,7 @@ class Solver:
 
         for i in range(size):
             for j in range(i+1,size):
-                if matrix[i, j] == 0:
+               if matrix[i, j] == 0:
                     self.add_constraint([j, i], '<=', 1)
 
             if self.__independent_set:
@@ -73,7 +72,7 @@ class Solver:
 
         values = self.__model.solution.get_values()
         if self.__binary:
-            clique_points = [index for index, val in enumerate(values) if fix_with_eps(val) > 0]
+            clique_points = [index for index, val in enumerate(values) if fix_with_eps(val) == 1]
             return clique_points
         else:
             return values
