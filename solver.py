@@ -72,6 +72,8 @@ class Solver:
         self.__model.solve()
 
         values = self.__model.solution.get_values()
-        
-        clique_points = [index for index, val in enumerate(values) if fix_with_eps(val) > 0]
-        return clique_points
+        if self.__binary:
+            clique_points = [index for index, val in enumerate(values) if fix_with_eps(val) > 0]
+            return clique_points
+        else:
+            return values
