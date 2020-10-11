@@ -27,22 +27,31 @@ def parse_answers(file_path):
         line = file.readline()
         return line.rstrip().split(' ')
 
-def to_set_of_str_inc_1(indexes):
-    return set([str(v+1) for v in indexes])
+def to_set_of_indexes(indexes):
+    return set([int(v)-1 for v in indexes])
+
+def is_clique(indexes_set, matrix):
+    indexes = list(indexes_set)
+    for num_i, i in enumerate(indexes):
+        for j in indexes[num_i+1:]:
+            if matrix[i, j] == 0:
+                return False
+    return True
 
 def check_model_for(input_path, answers_path, solve_while_found_solution = True):
     input_matrix = parse_input(input_path)
-    answers = set(parse_answers(answers_path))
+    answers = to_set_of_indexes(parse_answers(answers_path))
 
     solver = Solver()
     solver.fill_from_matrix(input_matrix)
 
     while(True):
-        clique_points = to_set_of_str_inc_1(solver.solve())
-        print(len(clique_points), len(answers))
-        print(clique_points, answers)
+        clique_points = set(solver.solve())
         if clique_points == answers:
             return True
+
+        if not is_clique(clique_points, input_matrix):
+            return False
             
         if len(clique_points) != len(answers):
             return False
@@ -51,5 +60,7 @@ def check_model_for(input_path, answers_path, solve_while_found_solution = True)
             return True
 
         for node_to_ban in clique_points.difference(answers):
-            solver.add_constraint([int(node_to_ban)-1], '==', 0)
-   
+            solver.add_constraint([node_to_ban], '==', 0)
+
+def is_equal_with_eps(var1, var2):
+    return
