@@ -35,13 +35,21 @@ class Solver:
         size = matrix.shape[0]
         self.add_variables(size)
 
+        max_degree = 0
         for i in range(size):
+            temp_degree = 0
             for j in range(i+1,size):
-               if matrix[i, j] == 0:
+                if matrix[i, j] == 0:
                     self.add_constraint([j, i], '<=', 1)
+                else:
+                    temp_degree += 1
+            max_degree = max((max_degree, temp_degree))
 
             if self.__independent_set:
                 self.add_constraint(maximal_independent_set(matrix, i), '<=', 1)
+
+        # count of nodes in clique can't be more, than max degree
+        self.add_constraint(list(range(size)), '<=', max_degree)
 
     def add_variables(self, count):
         self.__model.variables.add(obj=[1]*count,
@@ -59,14 +67,17 @@ class Solver:
             multiples_for_indexes = [1]*len(indexes_or_variables)
          
         target_sense = senses[valid_operations.index(sense)]
-        self.__model.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=indexes_or_variables,
-                                                                       val=multiples_for_indexes)],
-                                            senses=target_sense,
-                                            rhs=[value])
+        return self.__model.linear_constraints.add(lin_expr=[cplex.SparsePair(ind=indexes_or_variables,
+                                                                              val=multiples_for_indexes)],
+                                                   senses=target_sense,
+                                                   rhs=[value])
+
+    def remove_constraint(self, index_of_constraint):
+        self.__model.linear_constraints.delete(index_of_constraint)
 
     def solve(self):
         self.__model.set_results_stream(None)
-        print("Start to solve")
+        #print("Start to solve")
         #self.__model.write("example.lp")
         self.__model.solve()
 

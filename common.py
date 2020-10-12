@@ -2,6 +2,7 @@ import numpy as np
 from numpy.core.fromnumeric import var
 from solver import Solver
 from utils import *
+from bnb import BnB
 
 def parse_input(file_path):
     with open(file_path, 'r') as file:
@@ -70,5 +71,5 @@ def check_model_with_custom_bnb(input_path, answers_path):
 
     solver = Solver(binary=False)
     solver.fill_from_matrix(input_matrix)
-    values = solver.solve()
-    print(len([index for index, val in enumerate(values) if fix_with_eps(val) > 0]))
+    bnb = BnB(solver, correct_clique_size-1)
+    return len(bnb.result()) == correct_clique_size
