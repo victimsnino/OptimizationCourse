@@ -2,7 +2,7 @@ import cplex
 
 from numpy.matrixlib.defmatrix import matrix
 from utils import *
-import random
+import copy
 
 # Find maximal independent set for target node. Moreover, 
 # it search's only in rest part of matrix
@@ -17,12 +17,28 @@ def maximal_independent_set(matrix, input_node):
     not_neighbours = set(available_nodes).difference(neighbors.union(indep_nodes))
  
     while not_neighbours:
-        node = random.choice(list(not_neighbours))
+        node = list(not_neighbours)[0]
         indep_nodes.append(node)
  
         not_neighbours.difference_update(find_neighbours(node).union([node])) 
  
     return indep_nodes
+
+def find_all_independent_sets(input_matrix, input_node):
+    sets = []
+    new_set = []
+    matrix = copy.deepcopy(input_matrix)
+    while(True):
+        for node in new_set:
+            if node != input_node:
+                matrix[node, input_node] = 1
+                matrix[input_node, node] = 1
+        new_set = maximal_independent_set(matrix, input_node)
+        if len(new_set) <= 1:
+            break
+        sets.append(sorted(new_set))
+    
+    return sets
 
 def maximal_degree_that_potentially_can_be_size_of_clique(matrix):
     size = matrix.shape[0]
@@ -54,7 +70,8 @@ class Solver:
             max_degree = max((max_degree, temp_degree))
 
             if self.__independent_set:
-                self.add_constraint(maximal_independent_set(matrix, i), '<=', 1)
+                for ind_set in find_all_independent_sets(matrix, i):
+                    self.add_constraint(ind_set, '<=', 1)
 
         # count of nodes in clique can't be more, than max degree
         self.add_constraint(list(range(size)), '<=', max_degree)

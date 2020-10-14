@@ -84,6 +84,7 @@ class BnB:
                     best_int_solution_score = score
                     best_int_solution = values
                     print(score, variables_to_branch)
+                    return best_int_solution
 
                 self.__planar_pop_constraint()
                 continue
