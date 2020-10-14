@@ -53,7 +53,7 @@ def test_bnb(file_name):
     full_name = os.path.abspath('.')+'\\samples\\'+file_name
     start = time.time()
 
-    check_model_with_custom_bnb(full_name+'.clq', full_name+'.txt')
+    assert check_model_with_custom_bnb(full_name+'.clq', full_name+'.txt')
    
     end = time.time()
     print(f"Elapsed time: {end-start}")

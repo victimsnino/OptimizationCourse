@@ -71,5 +71,6 @@ def check_model_with_custom_bnb(input_path, answers_path):
 
     solver = Solver(binary=False)
     solver.fill_from_matrix(input_matrix)
-    bnb = BnB(solver, correct_clique_size-1)
-    return len(bnb.result()) == correct_clique_size
+    bnb = BnB(solver, correct_clique_size-0.1)
+    res = bnb.result()
+    return len(res) == correct_clique_size

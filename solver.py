@@ -72,6 +72,9 @@ class Solver:
                                                    senses=target_sense,
                                                    rhs=[value])
 
+    def pop_constraint(self):
+        self.remove_constraint(self.__model.linear_constraints.get_num()-1)
+
     def remove_constraint(self, index_of_constraint):
         self.__model.linear_constraints.delete(index_of_constraint)
 
@@ -82,6 +85,8 @@ class Solver:
         self.__model.solve()
 
         values = self.__model.solution.get_values()
+        if self.__model.solution.get_status() == 3: #infeasible
+            values = [0]*len(values)
         if self.__binary:
             clique_points = [index for index, val in enumerate(values) if fix_with_eps(val) == 1]
             return clique_points
