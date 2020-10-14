@@ -24,6 +24,14 @@ def maximal_independent_set(matrix, input_node):
  
     return indep_nodes
 
+def maximal_degree_that_potentially_can_be_size_of_clique(matrix):
+    size = matrix.shape[0]
+    degrees = [sum(matrix[i, :]) for i in range(size)]
+    for degree in range(size-1, 0, -1):
+        if sum([v >= degree for v in degrees]) >= degree:
+            return degree
+    
+
 class Solver:
     def __init__(self, binary=True, independent_set =True):
         self.__model = cplex.Cplex()
@@ -50,6 +58,7 @@ class Solver:
 
         # count of nodes in clique can't be more, than max degree
         self.add_constraint(list(range(size)), '<=', max_degree)
+        self.add_constraint(list(range(size)), '<=', maximal_degree_that_potentially_can_be_size_of_clique(matrix))
 
     def add_variables(self, count):
         self.__model.variables.add(obj=[1]*count,
