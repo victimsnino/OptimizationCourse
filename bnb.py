@@ -68,7 +68,7 @@ class BnB:
             values = self.__solver.solve()
             score = sum_with_eps(values)
             if var_to_branch == -1: # first
-                print(f"Best available score:{score}, heuristic best score:{self.__min_value_of_heuristic}")
+                print(f"Best available score: {score}, heuristic best score: {self.__min_value_of_heuristic}")
 
             if score < self.__min_value_of_heuristic or \
                score < best_int_solution_score + 1: # +1 due to our best is 34, then all non-int solution < 35 is not suitable

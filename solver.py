@@ -1,8 +1,9 @@
 import cplex
-
-from numpy.matrixlib.defmatrix import matrix
+from networkx.algorithms.bipartite.basic import color
 from utils import *
 import copy
+import networkx as nx
+import operator
 
 # Find maximal independent set for target node. Moreover, 
 # it search's only in rest part of matrix
@@ -41,11 +42,10 @@ def find_all_independent_sets(input_matrix, input_node):
     return sets
 
 def maximal_degree_that_potentially_can_be_size_of_clique(matrix):
-    size = matrix.shape[0]
-    degrees = [sum(matrix[i, :]) for i in range(size)]
-    for degree in range(size-1, 0, -1):
-        if sum([v >= degree for v in degrees]) >= degree:
-            return degree
+    graph = nx.from_numpy_matrix(matrix)
+    coloring = nx.algorithms.coloring.greedy_color(graph)
+    max_color= max(coloring.items(), key=operator.itemgetter(1))[1]
+    return max_color
     
 
 class Solver:

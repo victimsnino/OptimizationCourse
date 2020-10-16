@@ -1,5 +1,5 @@
+from heuristic import HeuristicSearcher
 import numpy as np
-from numpy.core.fromnumeric import var
 from solver import Solver
 from utils import *
 from bnb import BnB
@@ -71,7 +71,10 @@ def check_model_with_custom_bnb(input_path, answers_path):
 
     solver = Solver(binary=False)
     solver.fill_from_matrix(input_matrix)
-    bnb = BnB(solver, correct_clique_size-0.1)
+    
+    heuristic_size = HeuristicSearcher(input_matrix).result()
+    
+    bnb = BnB(solver, heuristic_size)
     res = bnb.result()
     print(f"Best solution results {len(res)}")
     return len(res) == correct_clique_size
