@@ -11,7 +11,7 @@ def sum_with_eps(values):
 
 # maximal close to the 1
 def get_variable_to_branch(values):
-    return int(argmin([abs(0.5 - fix_with_eps(v)) if not is_integer(v) else 100 for v in values ]))
+    return int(argmin([1 - fix_with_eps(v) if not is_integer(v) else 100 for v in values ]))
 
 class BnB:
     def __init__(self, solver: Solver, min_value_of_heuristic = 0):
@@ -20,8 +20,7 @@ class BnB:
 
         self.__best_known_solution = [0] # recursion
 
-        self.__planar_contraint_id_history = []
-        self.__planar_branched_var_history = []
+        self.__planar_history_constr_to_var = []
 
         self.__result = self.__solve_and_branching_planar()
 
@@ -32,32 +31,34 @@ class BnB:
         '''
         Checks if we return to this node, but doesn't remove constraints
         '''
-        if variable in self.__planar_branched_var_history:
-            index = self.__planar_branched_var_history.index(variable)
-            for v in range(len(self.__planar_branched_var_history)-1, index-1, -1):
-                self.__solver.remove_constraint(self.__planar_contraint_id_history[v])
+        found_index = -1
+        for index, pack in enumerate(self.__planar_history_constr_to_var):
+            if pack[1] == variable:
+                found_index = index
+                break
 
-            self.__planar_branched_var_history = self.__planar_branched_var_history[:index]
-            self.__planar_contraint_id_history = self.__planar_contraint_id_history[:index]
+        if found_index == -1:
+            return
+
+        for i in range(len(self.__planar_history_constr_to_var)-1, found_index-1, -1):
+            self.__solver.remove_constraint(self.__planar_history_constr_to_var[i][0])
+
+        self.__planar_history_constr_to_var = self.__planar_history_constr_to_var[:found_index]
 
     def __planar_add_constraint(self, var, val):
         self.__planar_remove_constraints_if_need_for_new_variable(var)
-        constr_id = self.__solver.add_constraint([var], '==', val)
-        self.__planar_contraint_id_history.append(constr_id)
-        self.__planar_branched_var_history.append(var)
+        constr_id = self.__solver.add_constraint([var], '==', val)[0]
+        self.__planar_history_constr_to_var.append([constr_id, var, val])
 
     def __planar_pop_constraint(self):
         self.__solver.pop_constraint()
-        self.__planar_contraint_id_history.pop()
-        self.__planar_branched_var_history.pop()
+        self.__planar_history_constr_to_var.pop()
 
     def __solve_and_branching_planar(self):
         best_int_solution = []
         best_int_solution_score = 0
 
         variables_to_branch = [[-1, -1]]
-        solutions = []
-        history_of_variables_to_branch = []
         while len(variables_to_branch) != 0:
             var_to_branch, value = variables_to_branch.pop()
 
@@ -69,22 +70,16 @@ class BnB:
             if var_to_branch == -1: # first
                 print(f"Best available score:{score}, heuristic best score:{self.__min_value_of_heuristic}")
 
-            if score < self.__min_value_of_heuristic or score < best_int_solution_score + 1: # +1 due to our best is 34, then all non-int solution < 35 is not suitable
+            if score < self.__min_value_of_heuristic or \
+               score < best_int_solution_score + 1: # +1 due to our best is 34, then all non-int solution < 35 is not suitable
                 self.__planar_pop_constraint()
                 continue
-
-            if values in solutions:
-                self.__planar_pop_constraint()
-                continue
-            
-            solutions.append(values)
 
             if is_integer_solution(values):
                 if score >= best_int_solution_score:
                     best_int_solution_score = score
                     best_int_solution = values
                     print(score, variables_to_branch)
-                    return best_int_solution
 
                 self.__planar_pop_constraint()
                 continue
@@ -93,9 +88,6 @@ class BnB:
 
             variables_to_branch.append([variable_to_branch, 0])
             variables_to_branch.append([variable_to_branch, 1])
-            if sorted(variables_to_branch) in history_of_variables_to_branch:
-                print("FIND!!!!")
-            history_of_variables_to_branch.append(sorted(variables_to_branch))
 
         return best_int_solution
 

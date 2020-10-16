@@ -73,4 +73,5 @@ def check_model_with_custom_bnb(input_path, answers_path):
     solver.fill_from_matrix(input_matrix)
     bnb = BnB(solver, correct_clique_size-0.1)
     res = bnb.result()
+    print(f"Best solution results {len(res)}")
     return len(res) == correct_clique_size
