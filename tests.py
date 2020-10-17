@@ -64,7 +64,10 @@ def test_bnb(file_name):
     full_name = os.path.abspath('.')+'\\samples\\'+file_name
     start = time.time()
 
-    assert check_model_with_custom_bnb(full_name+'.clq', full_name+'.txt')
+    success, size = check_model_with_custom_bnb(full_name+'.clq', full_name+'.txt')
    
     end = time.time()
     print(f"Elapsed time: {end-start}")
+
+    with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
+        res.write("Time is " + str(end-start) + " clique is " + str(size))

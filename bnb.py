@@ -2,6 +2,7 @@ from numpy import argmax, argmin
 from numpy.core.fromnumeric import var
 from solver import Solver
 from utils import *
+import time
 
 def is_integer_solution(values):
     return all([is_integer(val) for val in values])
@@ -14,9 +15,10 @@ def get_variable_to_branch(values):
     return int(argmin([1 - fix_with_eps(v) if not is_integer(v) else 100 for v in values ]))
 
 class BnB:
-    def __init__(self, solver: Solver, min_value_of_heuristic = 0):
+    def __init__(self, solver: Solver, min_value_of_heuristic = 0, timeout = 60*30):
         self.__solver = solver
         self.__min_value_of_heuristic = min_value_of_heuristic
+        self.__timeout = timeout
 
         self.__best_known_solution = [0] # recursion
 
@@ -55,11 +57,17 @@ class BnB:
         self.__planar_history_constr_to_var.pop()
 
     def __solve_and_branching_planar(self):
+        time_start = time.time()
+
         best_int_solution = []
         best_int_solution_score = 0
 
         variables_to_branch = [[-1, -1]]
         while len(variables_to_branch) != 0:
+            if time.time() - time_start >= self.__timeout:
+                print("Return by timeout")
+                return best_int_solution
+
             var_to_branch, value = variables_to_branch.pop()
 
             if var_to_branch != -1: # init
@@ -79,7 +87,7 @@ class BnB:
                 if score >= best_int_solution_score:
                     best_int_solution_score = score
                     best_int_solution = values
-                    print(score, variables_to_branch)
+                    print(f"Found new solution:  {score}")
 
                 self.__planar_pop_constraint()
                 continue
