@@ -98,31 +98,3 @@ class BnB:
             variables_to_branch.append([variable_to_branch, 1])
 
         return best_int_solution
-
-    def __solve_and_branching(self):
-        values = self.__solver.solve()
-
-        score = sum_with_eps(values)
-
-        if is_integer_solution(values):
-            if sum_with_eps(self.__best_known_solution) < score:
-                self.__best_known_solution = values
-            return values
-        
-        if sum_with_eps(self.__best_known_solution) > score or score < self.__min_value_of_heuristic:
-            return [0]*len(values)
-
-        variable_to_branch = get_variable_to_branch(values)
-        results = []
-        # in this order due to i get variables with values close to 1
-        for variable_value in [1, 0]:
-           constraint_id = self.__solver.add_constraint([variable_to_branch], '==', variable_value)
-           results.append(self.__solve_and_branching())
-           self.__solver.remove_constraint(constraint_id)
-
-        is_int = [is_integer_solution(v) for v in results]
-        if sum(is_int) == 0:
-            return [0]*len(results[0])
-        if sum(is_int) == 2:
-            return results[int(argmax([sum_with_eps(v) for v in results]))]
-        return results[int(argmax(is_int))]
