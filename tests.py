@@ -40,7 +40,7 @@ def test_simple_bnb():
     solver.add_constraint([0], '<=', 0.99)
     solver.add_constraint([1], '<=', 0.99)
 
-    bnb = BnB(solver)
+    bnb, _ = BnB(solver)
     assert bnb.result() == list(range(2,10))
 
 @pytest.mark.parametrize("file_name", files)
@@ -64,10 +64,10 @@ def test_bnb(file_name):
     full_name = os.path.abspath('.')+'\\samples\\'+file_name
     start = time.time()
 
-    size = check_model_with_custom_bnb(full_name+'.clq')
+    size, is_timeout = check_model_with_custom_bnb(full_name+'.clq')
    
     end = time.time()
     print(f"Elapsed time in seconds : {end-start}")
 
     with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
-        res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size))
+        res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))

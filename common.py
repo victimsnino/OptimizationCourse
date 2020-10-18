@@ -74,6 +74,6 @@ def check_model_with_custom_bnb(input_path):
     heuristic_size = HeuristicSearcher(input_matrix).result()
     
     bnb = BnB(solver, heuristic_size)
-    res = bnb.result()
+    res, timeout = bnb.result()
     print(f"Best solution results {len(res)}")
-    return len(res)
+    return len(res), timeout

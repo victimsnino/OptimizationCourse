@@ -19,6 +19,7 @@ class BnB:
         self.__solver = solver
         self.__min_value_of_heuristic = min_value_of_heuristic
         self.__timeout = timeout
+        self.__is_timeout = False
 
         self.__best_known_solution = [0] # recursion
 
@@ -27,7 +28,7 @@ class BnB:
         self.__result = self.__solve_and_branching_planar()
 
     def result(self):
-        return sorted([i for i, v in enumerate(self.__result) if fix_with_eps(v) == 1])
+        return sorted([i for i, v in enumerate(self.__result) if fix_with_eps(v) == 1]), self.__is_timeout
 
     def __planar_remove_constraints_if_need_for_new_variable(self, variable):
         '''
@@ -66,6 +67,7 @@ class BnB:
         while len(variables_to_branch) != 0:
             if time.time() - time_start >= self.__timeout:
                 print("Return by timeout")
+                self.__is_timeout = True
                 return best_int_solution
 
             var_to_branch, value = variables_to_branch.pop()
@@ -90,7 +92,7 @@ class BnB:
                     print(f"Found new solution:  {score}")
                     if var_to_branch == -1: # init
                         return best_int_solution
-                        
+
                 self.__planar_pop_constraint()
                 continue
             
