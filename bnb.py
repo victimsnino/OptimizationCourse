@@ -15,7 +15,7 @@ def get_variable_to_branch(values):
     return int(argmin([1 - fix_with_eps(v) if not is_integer(v) else 100 for v in values ]))
 
 class BnB:
-    def __init__(self, solver: Solver, min_value_of_heuristic = 0, timeout = 60*30):
+    def __init__(self, solver: Solver, min_value_of_heuristic = 0, timeout = 60*45):
         self.__solver = solver
         self.__min_value_of_heuristic = min_value_of_heuristic
         self.__timeout = timeout
@@ -76,7 +76,7 @@ class BnB:
             values = self.__solver.solve()
             score = sum_with_eps(values)
             if var_to_branch == -1: # first
-                print(f"Best available score: {score}, heuristic best score: {self.__min_value_of_heuristic}")
+                print(f"Init non-int score from cplex: {score}, heuristic init score: {self.__min_value_of_heuristic}")
 
             if score < self.__min_value_of_heuristic or \
                score < best_int_solution_score + 1: # +1 due to our best is 34, then all non-int solution < 35 is not suitable
@@ -88,7 +88,9 @@ class BnB:
                     best_int_solution_score = score
                     best_int_solution = values
                     print(f"Found new solution:  {score}")
-
+                    if var_to_branch == -1: # init
+                        return best_int_solution
+                        
                 self.__planar_pop_constraint()
                 continue
             

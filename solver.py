@@ -45,7 +45,7 @@ def maximal_degree_that_potentially_can_be_size_of_clique(matrix):
     graph = nx.from_numpy_matrix(matrix)
     coloring = nx.algorithms.coloring.greedy_color(graph)
     max_color= max(coloring.items(), key=operator.itemgetter(1))[1]
-    return max_color
+    return max_color+1
     
 
 class Solver:

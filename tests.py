@@ -8,7 +8,7 @@ from utils import *
 from bnb import BnB
 from heuristic import HeuristicSearcher
 
-files = ["C125.9", "keller4", "brock200_2", "p_hat300-1"]
+files = ["c-fat200-1", "c-fat200-2", "c-fat200-5", "c-fat500-1", "c-fat500-10", "c-fat500-2", "c-fat500-5", "MANN_a9", "hamming6-2", "hamming6-4", "gen200_p0.9_44", "gen200_p0.9_55", "san200_0.7_1", "san200_0.7_2", "san200_0.9_1", "san200_0.9_2", "san200_0.9_3", "sanr200_0.7", "C125.9", "keller4", "brock200_1", "brock200_2", "brock200_3", "brock200_4", "p_hat300-1", "p_hat300-2"]
 
 def test_eps():
     assert is_equal_with_eps(0.1, 0.1)
@@ -46,10 +46,10 @@ def test_simple_bnb():
 @pytest.mark.parametrize("file_name", files)
 def test_heuristic(file_name):
     full_name = os.path.abspath('.')+'\\samples\\'+file_name
-    input_matrix, answers = parse_input(full_name+'.clq'), parse_answers(full_name+'.txt')
+    input_matrix = parse_input(full_name+'.clq')
 
     res = HeuristicSearcher(input_matrix).result()
-    print(f"\nHeuristic cliue size {res}. Actual best clique size {len(answers)}")
+    print(f"\nHeuristic clique size {res}.")
 
 @pytest.mark.parametrize("file_name", files)
 def test_for_real_data(file_name):
@@ -64,10 +64,10 @@ def test_bnb(file_name):
     full_name = os.path.abspath('.')+'\\samples\\'+file_name
     start = time.time()
 
-    success, size = check_model_with_custom_bnb(full_name+'.clq', full_name+'.txt')
+    size = check_model_with_custom_bnb(full_name+'.clq')
    
     end = time.time()
-    print(f"Elapsed time: {end-start}")
+    print(f"Elapsed time in seconds : {end-start}")
 
     with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
-        res.write("Time is " + str(end-start) + " clique is " + str(size))
+        res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size))

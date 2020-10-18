@@ -1,7 +1,7 @@
 import math
 
 def fix_with_eps(value):
-    eps = 0.00000001
+    eps = 0.0000000001
     floor = math.floor(value)
 
     if value - floor <= eps:

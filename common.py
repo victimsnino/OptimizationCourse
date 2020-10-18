@@ -65,9 +65,8 @@ def check_cplex_int_model_with_answers(input_path, answers_path, solve_while_fou
         for node_to_ban in clique_points.difference(answers):
             solver.add_constraint([node_to_ban], '==', 0)
 
-def check_model_with_custom_bnb(input_path, answers_path):
+def check_model_with_custom_bnb(input_path):
     input_matrix = parse_input(input_path)
-    correct_clique_size = len(parse_answers(answers_path))
 
     solver = Solver(binary=False)
     solver.fill_from_matrix(input_matrix)
@@ -77,4 +76,4 @@ def check_model_with_custom_bnb(input_path, answers_path):
     bnb = BnB(solver, heuristic_size)
     res = bnb.result()
     print(f"Best solution results {len(res)}")
-    return len(res) == correct_clique_size, len(res)
+    return len(res)
