@@ -25,7 +25,9 @@ class BnB:
 
         self.__planar_history_constr_to_var = []
 
-        self.__result = self.__solve_and_branching_planar()
+        self.__best_int_solution = []
+        self.__best_int_solution_score = 0
+        self.__result = self.__solve_recursion()
 
     def result(self):
         return sorted([i for i, v in enumerate(self.__result) if fix_with_eps(v) == 1]), self.__is_timeout
@@ -102,3 +104,26 @@ class BnB:
             variables_to_branch.append([variable_to_branch, 1])
 
         return best_int_solution
+
+    def __solve_recursion(self):
+        values = self.__solver.solve()
+        score = sum_with_eps(values)
+
+        if score < self.__min_value_of_heuristic or \
+           score < self.__best_int_solution_score + 1: # +1 due to our best is 34, then all non-int solution < 35 is not suitable
+            return values
+
+        if is_integer_solution(values):
+            if score >= self.__best_int_solution_score:
+                self.__best_int_solution_score = score
+                self.__best_int_solution = values
+                print(f"Found new solution:  {score}")
+            return values
+        
+        var_to_branch = get_variable_to_branch(values)
+        for value in [1,0]:
+            constr = self.__solver.add_constraint([var_to_branch], '==', value)
+            self.__solve_recursion()
+            self.__solver.remove_constraint(constr)
+        
+        return self.__best_int_solution
