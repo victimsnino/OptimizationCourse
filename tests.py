@@ -83,5 +83,5 @@ def test_bnc(file_name):
     end = time.time()
     print(f"Elapsed time in seconds : {end-start}")
 
-    with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
-        res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))
+    #with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
+    #    res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))

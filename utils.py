@@ -26,7 +26,7 @@ def is_integer_solution(values):
     return all([is_integer(val) for val in values])
 
 def sum_with_eps(values):
-    return sum([fix_with_eps(v) for v in values])
+    return fix_with_eps(sum([fix_with_eps(v) for v in values]))
 
 # maximal close to the 1
 def get_variable_to_branch(values):

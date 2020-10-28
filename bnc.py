@@ -7,7 +7,7 @@ def maximal_independent_weighted_set(matrix, values):
     available_nodes = range(matrix.shape[0])
     find_neighbours = lambda x: set([j for j in available_nodes if matrix[x, j] == 1])
 
-    node = argmax(values)
+    node = int(argmax(values))
     neighbors = find_neighbours(node)
  
     indep_nodes = [node]
@@ -26,6 +26,7 @@ def maximal_independent_weighted_set(matrix, values):
 
 class BnC:
     def __init__(self, input_matrix : np.array, timeout = 60*45):
+        print("Start BNC")
         self.__timeout = timeout
         self.__time_start = time.time()
         self.__is_timeout = False
@@ -39,6 +40,7 @@ class BnC:
 
         self.__add_initial_constraints()
         self.__branch_and_cut()
+        print("")
     
     def result(self):
         return self.__best_solution_score, self.__is_timeout
@@ -49,8 +51,8 @@ class BnC:
 
     def __separation(self, values):
         res = maximal_independent_weighted_set(self.__input_matrix, values)
-        sum = sum([values[res] for v in res])
-        if sum > 1:
+        total = sum([values[v] for v in res])
+        if total > 1:
             return [res]
         return []
     
@@ -72,12 +74,19 @@ class BnC:
             print("Return by timeout")
             self.__is_timeout = True
             return
-            
+        
+        prev_score = np.inf
         while(True):
             values = self.__solver.solve()
             score = sum_with_eps(values)
 
-            if score < self.__best_solution_score + 1:
+            print(f'\x1b[1K\r[InProgress] Best score is {self.__best_solution_score} Current score is: {score}', end="")
+            if prev_score - score < 0.01:
+                break
+
+            prev_score = score
+
+            if math.floor(score) <= self.__best_solution_score:
                 return
 
             constraints = self.__separation(values)
@@ -87,7 +96,7 @@ class BnC:
             for constraint in constraints:
                 self.__solver.add_constraint(constraint, '<=', 1)
         
-        if is_integer(values):
+        if is_integer_solution(values):
             constraints = self.__check_solution(values)
             if len(constraints) == 0:
                 if score > self.__best_solution_score:
@@ -100,7 +109,7 @@ class BnC:
 
         var_to_branch = get_variable_to_branch(values)
         for value in [1,0]:
-            self.__solver.add_constraint([var_to_branch], '==', value)
+            constr = self.__solver.add_constraint([var_to_branch], '==', value)
             self.__branch_and_cut()
-            self.__solver.pop_constraint()
+            self.__solver.remove_constraint(constr)
 

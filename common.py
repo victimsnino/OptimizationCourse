@@ -84,5 +84,6 @@ def check_model_with_custom_bnc(input_path):
 
     bnc = BnC(input_matrix)
     res, timeout = bnc.result()
-    print(f"Best solution results {len(res)}")
-    return len(res), timeout
+    print(f"Best solution results {res}")
+    assert res
+    return res, timeout
