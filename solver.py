@@ -47,7 +47,6 @@ def maximal_degree_that_potentially_can_be_size_of_clique(matrix):
     max_color= max(coloring.items(), key=operator.itemgetter(1))[1]
     return max_color+1
     
-
 class Solver:
     def __init__(self, binary=True, independent_set =True):
         self.__model = cplex.Cplex()

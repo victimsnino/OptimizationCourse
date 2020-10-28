@@ -71,3 +71,17 @@ def test_bnb(file_name):
 
     with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
         res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))
+
+
+@pytest.mark.parametrize("file_name", files)
+def test_bnc(file_name):
+    full_name = os.path.abspath('.')+'\\samples\\'+file_name
+    start = time.time()
+
+    size, is_timeout = check_model_with_custom_bnc(full_name+'.clq')
+   
+    end = time.time()
+    print(f"Elapsed time in seconds : {end-start}")
+
+    with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
+        res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))

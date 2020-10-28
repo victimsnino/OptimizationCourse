@@ -1,3 +1,4 @@
+from bnc import BnC
 from heuristic import HeuristicSearcher
 import numpy as np
 from solver import Solver
@@ -75,5 +76,13 @@ def check_model_with_custom_bnb(input_path):
     
     bnb = BnB(solver, heuristic_size)
     res, timeout = bnb.result()
+    print(f"Best solution results {len(res)}")
+    return len(res), timeout
+
+def check_model_with_custom_bnc(input_path):
+    input_matrix = parse_input(input_path)
+
+    bnc = BnC(input_matrix)
+    res, timeout = bnc.result()
     print(f"Best solution results {len(res)}")
     return len(res), timeout

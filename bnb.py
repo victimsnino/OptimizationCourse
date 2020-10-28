@@ -1,18 +1,7 @@
-from numpy import argmax, argmin
-from numpy.core.fromnumeric import var
 from solver import Solver
 from utils import *
 import time
 
-def is_integer_solution(values):
-    return all([is_integer(val) for val in values])
-
-def sum_with_eps(values):
-    return sum([fix_with_eps(v) for v in values])
-
-# maximal close to the 1
-def get_variable_to_branch(values):
-    return int(argmin([1 - fix_with_eps(v) if not is_integer(v) else 100 for v in values ]))
 
 class BnB:
     def __init__(self, solver: Solver, min_value_of_heuristic = 0, timeout = 60*45):
