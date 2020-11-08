@@ -2,32 +2,27 @@
 import time
 from solver import *
 import numpy as np
+import operator
+import datetime
 
-def maximal_independent_weighted_set(matrix, values):
+def maximal_independent_weighted_set_fast(matrix, values):
     available_nodes = range(matrix.shape[0])
     find_neighbours = lambda x: set([j for j in available_nodes if matrix[x, j] == 1])
 
-    node = int(argmax(values))
-    neighbors = find_neighbours(node)
- 
-    indep_nodes = [node]
-    not_neighbours = set(available_nodes).difference(neighbors.union(indep_nodes))
- 
-    while not_neighbours:
-        list_not_neighbours = sorted(list(not_neighbours))
-        modified_values = [v for i, v in enumerate(values) if i in list_not_neighbours]
-
-        node = list_not_neighbours[argmax(modified_values)]
+    ind_to_val = sorted([(int(i), val) for i, val in enumerate(values)], key=operator.itemgetter(1), reverse=True)
+    indep_nodes = []
+    while ind_to_val:
+        node = ind_to_val.pop(0)[0]
         indep_nodes.append(node)
- 
-        not_neighbours.difference_update(find_neighbours(node).union([node])) 
- 
+
+        neighbors = find_neighbours(node)
+        ind_to_val = [(i, v) for i, v in ind_to_val if i not in neighbors]
+
     return indep_nodes
 
-
 class BnC:
-    def __init__(self, input_matrix : np.array, timeout = 60*45):
-        print("Start BNC")
+    def __init__(self, input_matrix : np.array, timeout = 60*60):
+        print(f"\n{datetime.datetime.now()}: Start BNC")
         self.__timeout = timeout
         self.__time_start = time.time()
         self.__is_timeout = False
@@ -54,7 +49,7 @@ class BnC:
     def __separation(self, values):
         to_return = []
         for target in [values, values/self.__degrees]:
-            res = maximal_independent_weighted_set(self.__input_matrix, target)
+            res = maximal_independent_weighted_set_fast(self.__input_matrix, target)
             total = sum([values[v] for v in res])
             if total > 1:
                 to_return.append(res)
@@ -65,6 +60,7 @@ class BnC:
         for i in range(self.__count):
             if fix_with_eps(values[i]) != 1:
                 continue
+
             for j in range(i+1, self.__count):
                 if fix_with_eps(values[j]) != 1:
                     continue
@@ -86,7 +82,7 @@ class BnC:
 
             #print(f'\x1b[1K\r[InProgress] Best score is {self.__best_solution_score} Current score is: {score}', end="")
 
-            if math.floor(score) <= self.__best_solution_score:
+            if int(score) <= self.__best_solution_score:
                 return
             
             diff = 0.001 if first_level else 0.01

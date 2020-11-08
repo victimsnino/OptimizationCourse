@@ -7,6 +7,7 @@ import time
 from utils import *
 from bnb import BnB
 from heuristic import HeuristicSearcher
+import datetime
 
 files = ["c-fat200-1", "c-fat200-2", "c-fat200-5", "c-fat500-1", "c-fat500-10", "c-fat500-2", "c-fat500-5", "MANN_a9", "hamming6-2", "hamming6-4", "gen200_p0.9_44", "gen200_p0.9_55", "san200_0.7_1", "san200_0.7_2", "san200_0.9_1", "san200_0.9_2", "san200_0.9_3", "sanr200_0.7", "C125.9", "keller4", "brock200_1", "brock200_2", "brock200_3", "brock200_4", "p_hat300-1", "p_hat300-2"]
 
@@ -81,7 +82,7 @@ def test_bnc(file_name):
     size, is_timeout = check_model_with_custom_bnc(full_name+'.clq')
    
     end = time.time()
-    print(f"Elapsed time in seconds : {end-start}")
+    print(f"{datetime.datetime.now()}: Elapsed time in seconds : {end-start}")
 
-    #with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
-    #    res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))
+    with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
+        res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))

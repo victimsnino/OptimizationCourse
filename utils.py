@@ -1,14 +1,14 @@
 import math
-from numpy import argmax, argmin
+from numpy import argmax, argmin, round
 
 def fix_with_eps(value):
     eps = 0.0000000001
-    floor = math.floor(value)
+    floor = int(value)
 
     if value - floor <= eps:
         return floor
-        
-    ceil = math.ceil(value)
+
+    ceil = floor + 1
     if ceil - value <= eps:
         return ceil
 
