@@ -20,7 +20,7 @@ class BnP:
         self.__input_matrix = input_matrix
         self.__count = self.__input_matrix.shape[0]
 
-        self.__colors = self.__generate_initial_colors_and_constraints()
+        self.__colors, self.__constraints = self.__generate_initial_colors_and_constraints()
         self.__best_count_of_colors = 10000000000000
         self.__branch_colors_force_one = []
         self.__branch_colors_force_zero = []
@@ -60,8 +60,26 @@ class BnP:
                 color_set = sorted(self.__maximize_color(color_set))
                 if color_set not in result:
                     result.append(color_set)
+
+        constraints = []
+        for node_i in range(self.__count):
+            constraints.append([i for i, color in enumerate(result) if node_i in color])
+
+        return result, constraints
+
+    def __build_direct_model(self):
+        model = Solver(binary=False, max=False)
+        model.add_variables(len(self.__colors))
+        for constr in self.__constraints:
+            model.add_constraint(constr, '>=', 1)
         
-        return result
+        for color in self.__branch_colors_force_one:
+            model.add_constraint([color], '>=', 1)
+
+        for color in self.__branch_colors_force_zero:
+            model.add_constraint([color], '<=', 0)
+
+        return model.solve()
 
     def __build_exact_model(self, solution):
         exact_model = Solver(binary=True, max=True)
@@ -75,13 +93,19 @@ class BnP:
 
         return exact_model.solve()
 
+    def __add_new_color(self, color):
+        self.__colors.append(color)
+        index_of_color = len(self.__colors)-1
+        for c in color:
+            self.__constraints[c].append(index_of_color)
+
     def __column_generation(self, exact = False):
-        exact = True
+        exact = False
         model = Solver(binary=False, max=True)
         model.add_variables(self.__count)
 
         for i, c in enumerate(self.__colors):
-            constraint = copy.deepcopy(c)
+            constraint = copy.copy(c)
             multiples_for_variables = [1]*len(constraint)
             if i in self.__branch_colors_force_one:
                 constraint.append(model.add_variables(1, obj=1)[0])
@@ -95,15 +119,15 @@ class BnP:
         
         old_value = 100000
         while(True):
-            solution = model.solve()
+            solution = model.solve()[:self.__count]
 
             if exact:
                 new_color = sorted(self.__build_exact_model(solution))
             else:
-                new_color = sorted(maximal_independent_weighted_set_fast(self.__input_matrix, solution[:self.__count]))
+                new_color = sorted(maximal_independent_weighted_set_fast(self.__input_matrix, solution))
 
             if sum([solution[v] for v in new_color]) >  1:
-                self.__colors.append(new_color)
+                self.__add_new_color(new_color)
                 model.add_constraint(new_color, '<=', 1)
             else:
                 break
@@ -115,23 +139,27 @@ class BnP:
             
             old_value = value
 
-        return solution
-
     def __is_possible_prune(self, values):
         sum = sum_with_eps(values)
-        return fix_with_eps(sum - (self.__best_count_of_colors - 1)) > 0
+        return fix_with_eps(sum - (self.__best_count_of_colors - 1)) >= 0
 
     def __solve(self):
-        last_solution = self.__column_generation(exact=False)
-        if self.__is_possible_prune(last_solution) or is_integer_solution(last_solution):
-            last_solution = self.__column_generation(exact=True)
+        self.__column_generation(exact=False)
+        last_solution = self.__build_direct_model()
+        #print(f'Init {sum_with_eps(last_solution)}')
+        #if self.__is_possible_prune(last_solution) or is_integer_solution(last_solution):
+        #    self.__column_generation(exact=True)
 
+        #last_solution = self.__build_direct_model()
+        print(f'\x1b[1K\rAfter if {sum_with_eps(last_solution)}', end="")
         # prune branch
         if self.__is_possible_prune(last_solution):
+            #print("PRUNE")
             return
         
         if is_integer_solution(last_solution):
             self.__best_count_of_colors = sum_with_eps(last_solution)
+            print(f'New solution {self.__best_count_of_colors}')
             return
 
         # branching
@@ -141,6 +169,9 @@ class BnP:
         self.__solve()
         self.__branch_colors_force_one.pop()
 
+        if self.__is_possible_prune(last_solution):
+            return
+            
         self.__branch_colors_force_zero.append(var_to_branch)
         self.__solve()
         self.__branch_colors_force_zero.pop()

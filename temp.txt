@@ -1,0 +1,191 @@
+tests.py::test_bnc[c-fat200-1] Start BNC
+
+Best solution results 12
+Elapsed time in seconds : 0.5919990539550781
+PASSED
+tests.py::test_bnc[c-fat200-2] Start BNC
+
+Best solution results 24
+Elapsed time in seconds : 0.32599711418151855
+PASSED
+tests.py::test_bnc[c-fat200-5] Start BNC
+
+Best solution results 58
+Elapsed time in seconds : 8.459561586380005
+PASSED
+tests.py::test_bnc[c-fat500-1] Start BNC
+
+Best solution results 14
+Elapsed time in seconds : 4.317000389099121
+PASSED
+tests.py::test_bnc[c-fat500-10] Start BNC
+
+Best solution results 126
+Elapsed time in seconds : 23.53629183769226
+PASSED
+tests.py::test_bnc[c-fat500-2] Start BNC
+
+Best solution results 26
+Elapsed time in seconds : 2.0662784576416016
+PASSED
+tests.py::test_bnc[c-fat500-5] Start BNC
+
+Best solution results 64
+Elapsed time in seconds : 1.0375547409057617
+PASSED
+tests.py::test_bnc[MANN_a9] Start BNC
+
+Best solution results 16
+Elapsed time in seconds : 0.08651328086853027
+PASSED
+tests.py::test_bnc[hamming6-2] Start BNC
+
+Best solution results 32
+Elapsed time in seconds : 0.0429990291595459
+PASSED
+tests.py::test_bnc[hamming6-4] Start BNC
+
+Best solution results 4
+Elapsed time in seconds : 0.3835294246673584
+PASSED
+tests.py::test_bnc[gen200_p0.9_44] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 37
+Elapsed time in seconds : 2700.1135132312775
+PASSED
+tests.py::test_bnc[gen200_p0.9_55] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 39
+Elapsed time in seconds : 2702.3503205776215
+PASSED
+tests.py::test_bnc[san200_0.7_1] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 17
+Elapsed time in seconds : 2702.4180653095245
+PASSED
+tests.py::test_bnc[san200_0.7_2] Start BNC
+
+Best solution results 18
+Elapsed time in seconds : 653.0490746498108
+PASSED
+tests.py::test_bnc[san200_0.9_1] Start BNC
+
+Best solution results 70
+Elapsed time in seconds : 2236.1138722896576
+PASSED
+tests.py::test_bnc[san200_0.9_2] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 40
+Elapsed time in seconds : 2702.305585861206
+PASSED
+tests.py::test_bnc[san200_0.9_3] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 37
+Elapsed time in seconds : 2702.3192830085754
+PASSED
+tests.py::test_bnc[sanr200_0.7] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 18
+Elapsed time in seconds : 2702.3705751895905
+PASSED
+tests.py::test_bnc[C125.9] Start BNC
+
+Best solution results 34
+Elapsed time in seconds : 321.01467847824097
+PASSED
+tests.py::test_bnc[keller4] Start BNC
+
+Best solution results 11
+Elapsed time in seconds : 103.57761669158936
+PASSED
+tests.py::test_bnc[brock200_1] Start BNC
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+Return by timeout
+
+Best solution results 21
+Elapsed time in seconds : 2702.3136253356934
+PASSED
+tests.py::test_bnc[brock200_2] Start BNC
+
+Best solution results 12
+Elapsed time in seconds : 184.7880139350891
+PASSED
+tests.py::test_bnc[brock200_3] Start BNC
+
+Best solution results 15
+Elapsed time in seconds : 1026.75932431221
+PASSED
+tests.py::test_bnc[brock200_4] Start BNC
