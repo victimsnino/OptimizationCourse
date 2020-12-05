@@ -86,3 +86,14 @@ def test_bnc(file_name):
 
     with open(os.path.abspath('.')+'\\results\\'+file_name+'.txt', 'w') as res:
         res.write("Time in seconds is " + str(end-start) + " clique size is " + str(size) + " timeout: " + str(is_timeout))
+
+coloring_files = ['myciel3.col'] #['myciel3.col', 'myciel4.col', 'myciel6.col', 'queen9_9.col']
+@pytest.mark.parametrize("file_name", coloring_files)
+def test_bnp(file_name):
+    full_name = os.path.abspath('.')+'\\samples_coloring\\'+file_name
+    start = time.time()
+
+    size, is_timeout = check_model_with_bnp(full_name)
+   
+    end = time.time()
+    print(f"{datetime.datetime.now()}: Elapsed time in seconds : {end-start}")

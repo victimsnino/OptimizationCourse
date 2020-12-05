@@ -4,6 +4,7 @@ import numpy as np
 from solver import Solver
 from utils import *
 from bnb import BnB
+from bnp import BnP
 
 def parse_input(file_path):
     with open(file_path, 'r') as file:
@@ -83,6 +84,15 @@ def check_model_with_custom_bnc(input_path):
     input_matrix = parse_input(input_path)
 
     bnc = BnC(input_matrix)
+    res, timeout = bnc.result()
+    print(f"Best solution results {res}")
+    assert res
+    return res, timeout
+
+def check_model_with_bnp(input_path):
+    input_matrix = parse_input(input_path)
+
+    bnc = BnP(input_matrix)
     res, timeout = bnc.result()
     print(f"Best solution results {res}")
     assert res
