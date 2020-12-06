@@ -20,10 +20,9 @@ class BnP:
         self.__input_matrix = input_matrix
         self.__count = self.__input_matrix.shape[0]
 
-        self.__colors, self.__constraints = self.__generate_initial_colors_and_constraints()
+        self.__colors, self.__direct_model = self.__generate_initial_colors_and_model()
+        self.__dual_model, self.__dual_variable_for_zero, self.__dual_variable_for_one = self.__generate_dual_model()
         self.__best_count_of_colors = 10000000000000
-        self.__branch_colors_force_one = []
-        self.__branch_colors_force_zero = []
         self.__solve()
         
     def result(self):
@@ -46,7 +45,7 @@ class BnP:
             available_nodes = [n for n in available_nodes if n not in neighbors]
         return result
 
-    def __generate_initial_colors_and_constraints(self):
+    def __generate_initial_colors_and_model(self):
         G = nx.from_numpy_matrix(self.__input_matrix)
         result = []
         for strategy in ['largest_first', 'random_sequential', 'smallest_last', 'independent_set', 'connected_sequential_bfs', 'saturation_largest_first']:
@@ -61,83 +60,71 @@ class BnP:
                 if color_set not in result:
                     result.append(color_set)
 
-        constraints = []
-        for node_i in range(self.__count):
-            constraints.append([i for i, color in enumerate(result) if node_i in color])
-
-        return result, constraints
-
-    def __build_direct_model(self):
         model = Solver(binary=False, max=False)
-        model.add_variables(len(self.__colors))
-        for constr in self.__constraints:
-            model.add_constraint(constr, '>=', 1)
-        
-        for color in self.__branch_colors_force_one:
-            model.add_constraint([color], '>=', 1)
+        model.add_variables(len(result))
+        for node_i in range(self.__count):
+            model.add_constraint([i for i, color in enumerate(result) if node_i in color], '>=', 1)
 
-        for color in self.__branch_colors_force_zero:
-            model.add_constraint([color], '<=', 0)
+        return result, model
 
-        return model.solve()
+    def __generate_dual_model(self):
+        model = Solver(binary=False, max=True)
+
+        zero_variable = model.add_variables(1, ub=1, obj=0)[0]
+        one_variable = model.add_variables(1, ub=1, obj=1)[0]
+
+        model.add_variables(self.__count)
+
+        for i, constraint in enumerate(self.__colors):
+            model.add_constraint([v+2 for v in constraint], '<=', 1)
+
+        return model,zero_variable, one_variable
 
     def __build_exact_model(self, solution):
         exact_model = Solver(binary=True, max=True)
         for v in range(self.__count):
-            exact_model.add_variables(1, obj=solution[v]+0.0001)
+            exact_model.add_variables(1, obj=solution[v]+0.0000000001)
 
         for i in range(self.__count):
             for j in range(i+1, self.__count):
                 if self.__input_matrix[i,j] == 1:
                     exact_model.add_constraint([i,j], '<=', 1)
 
-        return exact_model.solve()
+        slave_solution = exact_model.solve(True)
+        print(f'Bound old {np.sum(solution)} new {np.sum(slave_solution)} result {np.sum(solution)/np.sum(slave_solution)}')
+        print(slave_solution)
+        return exact_model.solve(False)
 
     def __add_new_color(self, color):
         self.__colors.append(color)
-        index_of_color = len(self.__colors)-1
+        index_of_color = self.__direct_model.add_variables(1)[0]
         for c in color:
-            self.__constraints[c].append(index_of_color)
+            self.__direct_model.set_coefficent_for_constraint(c, index_of_color, 1)
 
     def __column_generation(self, exact = False):
-        exact = False
-        model = Solver(binary=False, max=True)
-        model.add_variables(self.__count)
-
-        for i, c in enumerate(self.__colors):
-            constraint = copy.copy(c)
-            multiples_for_variables = [1]*len(constraint)
-            if i in self.__branch_colors_force_one:
-                constraint.append(model.add_variables(1, obj=1)[0])
-                multiples_for_variables.append(1)
-            
-            if i in self.__branch_colors_force_zero:
-                constraint.append(model.add_variables(1, obj=0)[0])
-                multiples_for_variables.append(-1)
-
-            model.add_constraint(constraint, '<=', 1, multiples_for_variables)
-        
         old_value = 100000
+        added_new_color = False
         while(True):
-            solution = model.solve()[:self.__count]
-
+            solution = self.__dual_model.solve()[2:self.__count+2]
             if exact:
                 new_color = sorted(self.__build_exact_model(solution))
             else:
                 new_color = sorted(maximal_independent_weighted_set_fast(self.__input_matrix, solution))
 
-            if sum([solution[v] for v in new_color]) >  1:
-                self.__add_new_color(new_color)
-                model.add_constraint(new_color, '<=', 1)
-            else:
+            if sum([solution[v] for v in new_color]) <=  1:
                 break
             
+            self.__add_new_color(new_color)
+            self.__dual_model.add_constraint([v+2 for v in new_color], '<=', 1)
+            added_new_color = True
+        
             # tailing
             value = sum_with_eps(solution)
             if old_value - value < 0.001:
                 break
             
             old_value = value
+        return added_new_color
 
     def __is_possible_prune(self, values):
         sum = sum_with_eps(values)
@@ -145,16 +132,16 @@ class BnP:
 
     def __solve(self):
         self.__column_generation(exact=False)
-        last_solution = self.__build_direct_model()
-        #print(f'Init {sum_with_eps(last_solution)}')
-        #if self.__is_possible_prune(last_solution) or is_integer_solution(last_solution):
-        #    self.__column_generation(exact=True)
+        last_solution = self.__direct_model.solve()
 
-        #last_solution = self.__build_direct_model()
+        if self.__is_possible_prune(last_solution) or is_integer_solution(last_solution):
+           self.__column_generation(exact=True)
+
+        # last_solution = self.__direct_model.solve()
         print(f'\x1b[1K\rAfter if {sum_with_eps(last_solution)}', end="")
+
         # prune branch
         if self.__is_possible_prune(last_solution):
-            #print("PRUNE")
             return
         
         if is_integer_solution(last_solution):
@@ -164,14 +151,18 @@ class BnP:
 
         # branching
         var_to_branch = get_variable_to_branch(last_solution)
-        
-        self.__branch_colors_force_one.append(var_to_branch)
+
+        constr = self.__direct_model.add_constraint([var_to_branch], '>=', 1)
+        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_one, 1)
         self.__solve()
-        self.__branch_colors_force_one.pop()
+        self.__direct_model.remove_constraint(constr)
+        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_one, 0)
 
         if self.__is_possible_prune(last_solution):
             return
             
-        self.__branch_colors_force_zero.append(var_to_branch)
+        constr = self.__direct_model.add_constraint([var_to_branch], '<=', 0)
+        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_zero, -1)
         self.__solve()
-        self.__branch_colors_force_zero.pop()
+        self.__direct_model.remove_constraint(constr)
+        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_zero, 0)
