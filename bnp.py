@@ -22,6 +22,8 @@ class BnP:
 
         self.__colors, self.__direct_model = self.__generate_initial_colors_and_model()
         self.__dual_model, self.__dual_variable_for_zero, self.__dual_variable_for_one = self.__generate_dual_model()
+        self.__zero_colors =[]
+        self.__one_colors=[]
         self.__best_count_of_colors = 10000000000000
         self.__solve()
         
@@ -90,10 +92,10 @@ class BnP:
                 if self.__input_matrix[i,j] == 1:
                     exact_model.add_constraint([i,j], '<=', 1)
 
-        slave_solution = exact_model.solve(True)
-        print(f'Bound old {np.sum(solution)} new {np.sum(slave_solution)} result {np.sum(solution)/np.sum(slave_solution)}')
-        print(slave_solution)
-        return exact_model.solve(False)
+        for zero_color in self.__zero_colors:
+            exact_model.add_constraint(self.__colors[zero_color], '<=', len(self.__colors[zero_color])-1)
+
+        return exact_model.solve()
 
     def __add_new_color(self, color):
         self.__colors.append(color)
@@ -111,7 +113,7 @@ class BnP:
             else:
                 new_color = sorted(maximal_independent_weighted_set_fast(self.__input_matrix, solution))
 
-            if sum([solution[v] for v in new_color]) <=  1:
+            if new_color in self.__colors or sum([solution[v] for v in new_color]) <=  1:
                 break
             
             self.__add_new_color(new_color)
@@ -130,15 +132,15 @@ class BnP:
         sum = sum_with_eps(values)
         return fix_with_eps(sum - (self.__best_count_of_colors - 1)) >= 0
 
-    def __solve(self):
+    def __solve(self, depth_level=1):
         self.__column_generation(exact=False)
         last_solution = self.__direct_model.solve()
 
         if self.__is_possible_prune(last_solution) or is_integer_solution(last_solution):
            self.__column_generation(exact=True)
 
-        # last_solution = self.__direct_model.solve()
-        print(f'\x1b[1K\rAfter if {sum_with_eps(last_solution)}', end="")
+        last_solution = self.__direct_model.solve()
+        print(f'\x1b[1K\r{depth_level} After if {sum_with_eps(last_solution)}', end="\n")
 
         # prune branch
         if self.__is_possible_prune(last_solution):
@@ -154,15 +156,20 @@ class BnP:
 
         constr = self.__direct_model.add_constraint([var_to_branch], '>=', 1)
         self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_one, 1)
-        self.__solve()
+        self.__one_colors.append(var_to_branch)
+        self.__solve(depth_level+1)
+        self.__one_colors.pop()
         self.__direct_model.remove_constraint(constr)
         self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_one, 0)
 
+        print('POP')
         if self.__is_possible_prune(last_solution):
             return
             
         constr = self.__direct_model.add_constraint([var_to_branch], '<=', 0)
         self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_zero, -1)
-        self.__solve()
+        self.__zero_colors.append(var_to_branch)
+        self.__solve(depth_level+1)
+        self.__zero_colors.pop()
         self.__direct_model.remove_constraint(constr)
         self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_zero, 0)
