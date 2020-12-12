@@ -78,6 +78,10 @@ class BnP:
                 if self.__input_matrix[i,j] == 1:
                     exact_model.add_constraint([i,j], '<=', 1)
 
+        G = nx.from_numpy_matrix(self.__input_matrix)
+        for clique in nx.algorithms.clique.find_cliques(G):
+            exact_model.add_constraint(clique, '<=', 1)
+
         return exact_model
 
     def __solve_exact_model(self, solution):
@@ -85,7 +89,7 @@ class BnP:
             self.__exact_model.set_coefficent_for_variable(v, solution[v]+0.0000000001)
 
         result = self.__exact_model.solve()
-        score = sum_with_eps(solution)/sum_with_eps(self.__exact_model.get_values())
+        score = sum_with_eps(solution)/self.__exact_model.get_objective_score()
         return  result, score
 
     def __add_new_color(self, color):
@@ -128,13 +132,13 @@ class BnP:
         return fix_with_eps(obj - (self.__best_count_of_colors - 1)) >= 0
 
     def __solve(self, depth_level=1, old_value=10000000):
-        self.__column_generation(exact=False)
+        self.__column_generation(exact=True)
         last_solution = self.__direct_model.solve()
         obj = self.__direct_model.get_objective_score()
 
-        if self.__is_possible_prune(obj) or is_integer_solution(last_solution):
-            self.__column_generation(exact=True)
-            last_solution = self.__direct_model.solve()
+        # if self.__is_possible_prune(obj) or is_integer_solution(last_solution):
+        #     self.__column_generation(exact=True)
+        #     last_solution = self.__direct_model.solve()
 
         obj = self.__direct_model.get_objective_score()
         print(f'\x1b[1K\r{depth_level} After if {obj}', end="")
@@ -145,11 +149,11 @@ class BnP:
         
         if is_integer_solution(last_solution):
             self.__best_count_of_colors = obj
-            print(f'New solution {self.__best_count_of_colors}')
+            print(f'\nNew solution {self.__best_count_of_colors}')
             return
 
         # tailing
-        if abs(old_value - obj) <= 0.01:
+        if abs(old_value - obj) <= 0.001:
             return
 
         # branching
