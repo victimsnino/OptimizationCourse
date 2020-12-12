@@ -48,10 +48,12 @@ def maximal_degree_that_potentially_can_be_size_of_clique(matrix):
     return max_color+1
     
 class Solver:
-    def __init__(self, binary=True, independent_set =True, max = True):
+    def __init__(self, binary=True, independent_set =True, max = True, max_limit = None):
         self.__model = cplex.Cplex()
         self.__max = max
         self.__model.objective.set_sense(self.__model.objective.sense.maximize if max else self.__model.objective.sense.minimize)
+        if max_limit:
+            self.__model.parameters.simplex.limits.upperobj.set(max_limit)
         self.__binary = binary
         self.__independent_set = independent_set
 
@@ -104,6 +106,9 @@ class Solver:
     def set_coefficent_for_constraint(self, constraint_id, variable, coefficient):
         self.__model.linear_constraints.set_linear_components(constraint_id, [[variable], [coefficient]])
 
+    def set_coefficent_for_variable(self, var, coef):
+        self.__model.objective.set_linear(var, coef)
+
     def remove_constraint(self, index_of_constraint):
         self.__model.linear_constraints.delete(index_of_constraint)
 
@@ -121,3 +126,12 @@ class Solver:
             return clique_points
         else:
             return values
+
+    def get_values(self):
+        return self.__model.solution.get_values()
+
+    def get_dual_values(self, begin, end):
+        return self.__model.solution.get_dual_values(begin, end)
+    
+    def get_objective_score(self):
+        return self.__model.solution.get_objective_value()

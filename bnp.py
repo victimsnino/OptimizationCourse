@@ -21,9 +21,8 @@ class BnP:
         self.__count = self.__input_matrix.shape[0]
 
         self.__colors, self.__direct_model = self.__generate_initial_colors_and_model()
-        self.__dual_model, self.__dual_variable_for_zero, self.__dual_variable_for_one = self.__generate_dual_model()
-        self.__zero_colors =[]
-        self.__one_colors=[]
+        self.__exact_model = self.__build_exact_model()
+
         self.__best_count_of_colors = 10000000000000
         self.__solve()
         
@@ -69,55 +68,52 @@ class BnP:
 
         return result, model
 
-    def __generate_dual_model(self):
-        model = Solver(binary=False, max=True)
-
-        zero_variable = model.add_variables(1, ub=1, obj=0)[0]
-        one_variable = model.add_variables(1, ub=1, obj=1)[0]
-
-        model.add_variables(self.__count)
-
-        for i, constraint in enumerate(self.__colors):
-            model.add_constraint([v+2 for v in constraint], '<=', 1)
-
-        return model,zero_variable, one_variable
-
-    def __build_exact_model(self, solution):
-        exact_model = Solver(binary=True, max=True)
+    def __build_exact_model(self):
+        exact_model = Solver(binary=True, max=True, max_limit=1.00000000000000001)
         for v in range(self.__count):
-            exact_model.add_variables(1, obj=solution[v]+0.0000000001)
+            exact_model.add_variables(1, obj=0)
 
         for i in range(self.__count):
             for j in range(i+1, self.__count):
                 if self.__input_matrix[i,j] == 1:
                     exact_model.add_constraint([i,j], '<=', 1)
 
-        for zero_color in self.__zero_colors:
-            exact_model.add_constraint(self.__colors[zero_color], '<=', len(self.__colors[zero_color])-1)
+        return exact_model
 
-        return exact_model.solve()
+    def __solve_exact_model(self, solution):
+        for v in range(self.__count):
+            self.__exact_model.set_coefficent_for_variable(v, solution[v]+0.0000000001)
+
+        result = self.__exact_model.solve()
+        score = sum_with_eps(solution)/sum_with_eps(self.__exact_model.get_values())
+        return  result, score
 
     def __add_new_color(self, color):
         self.__colors.append(color)
         index_of_color = self.__direct_model.add_variables(1)[0]
-        for c in color:
-            self.__direct_model.set_coefficent_for_constraint(c, index_of_color, 1)
+        for node in color:
+            self.__direct_model.set_coefficent_for_constraint(node, index_of_color, 1)
 
     def __column_generation(self, exact = False):
         old_value = 100000
         added_new_color = False
         while(True):
-            solution = self.__dual_model.solve()[2:self.__count+2]
+            self.__direct_model.solve()
+            solution = self.__direct_model.get_dual_values(0, self.__count-1)
+
+            score = 0
             if exact:
-                new_color = sorted(self.__build_exact_model(solution))
+                new_color, score = self.__solve_exact_model(solution)
+                new_color = sorted(new_color)
             else:
                 new_color = sorted(maximal_independent_weighted_set_fast(self.__input_matrix, solution))
 
-            if new_color in self.__colors or sum([solution[v] for v in new_color]) <=  1:
+            if new_color in self.__colors or \
+                sum([solution[v] for v in new_color]) <=  1 or \
+                score >= self.__best_count_of_colors:
                 break
             
             self.__add_new_color(new_color)
-            self.__dual_model.add_constraint([v+2 for v in new_color], '<=', 1)
             added_new_color = True
         
             # tailing
@@ -128,48 +124,46 @@ class BnP:
             old_value = value
         return added_new_color
 
-    def __is_possible_prune(self, values):
-        sum = sum_with_eps(values)
-        return fix_with_eps(sum - (self.__best_count_of_colors - 1)) >= 0
+    def __is_possible_prune(self, obj):
+        return fix_with_eps(obj - (self.__best_count_of_colors - 1)) >= 0
 
-    def __solve(self, depth_level=1):
+    def __solve(self, depth_level=1, old_value=10000000):
         self.__column_generation(exact=False)
         last_solution = self.__direct_model.solve()
+        obj = self.__direct_model.get_objective_score()
 
-        if self.__is_possible_prune(last_solution) or is_integer_solution(last_solution):
-           self.__column_generation(exact=True)
+        if self.__is_possible_prune(obj) or is_integer_solution(last_solution):
+            self.__column_generation(exact=True)
+            last_solution = self.__direct_model.solve()
 
-        last_solution = self.__direct_model.solve()
-        print(f'\x1b[1K\r{depth_level} After if {sum_with_eps(last_solution)}', end="\n")
+        obj = self.__direct_model.get_objective_score()
+        print(f'\x1b[1K\r{depth_level} After if {obj}', end="")
 
         # prune branch
-        if self.__is_possible_prune(last_solution):
+        if self.__is_possible_prune(obj):
             return
         
         if is_integer_solution(last_solution):
-            self.__best_count_of_colors = sum_with_eps(last_solution)
+            self.__best_count_of_colors = obj
             print(f'New solution {self.__best_count_of_colors}')
+            return
+
+        # tailing
+        if abs(old_value - obj) <= 0.01:
             return
 
         # branching
         var_to_branch = get_variable_to_branch(last_solution)
 
         constr = self.__direct_model.add_constraint([var_to_branch], '>=', 1)
-        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_one, 1)
-        self.__one_colors.append(var_to_branch)
-        self.__solve(depth_level+1)
-        self.__one_colors.pop()
+        self.__solve(depth_level+1, obj)
         self.__direct_model.remove_constraint(constr)
-        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_one, 0)
 
-        print('POP')
-        if self.__is_possible_prune(last_solution):
+        if self.__is_possible_prune(obj):
             return
-            
+        
         constr = self.__direct_model.add_constraint([var_to_branch], '<=', 0)
-        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_zero, -1)
-        self.__zero_colors.append(var_to_branch)
-        self.__solve(depth_level+1)
-        self.__zero_colors.pop()
+        exact_constr = self.__exact_model.add_constraint(self.__colors[var_to_branch], '<=', len(self.__colors[var_to_branch])-1)
+        self.__solve(depth_level+1, obj)
         self.__direct_model.remove_constraint(constr)
-        self.__dual_model.set_coefficent_for_constraint(var_to_branch, self.__dual_variable_for_zero, 0)
+        self.__exact_model.remove_constraint(exact_constr)
